@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD Categorías Autos</title>
+</head>
+<body>
+
+  <h1>CRUD Categorías de Autos</h1>
+
+  <!-- CREATE -->
+  <input id="descripcion" placeholder="Nueva categoría">
+  <button onclick="crearCategoria()">Crear</button>
+
+  <hr>
+
+  <!-- READ -->
+  <button onclick="obtenerCategorias()">Ver categorías</button>
+
+  <ul id="lista"></ul>
+
+  <script>
+    const API = "https://backendjs-gvd1.onrender.com/categorias";
+
+    // 🔵 GET
+    async function obtenerCategorias() {
+      const res = await fetch(API);
+      const data = await res.json();
+
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+
+      data.forEach(cat => {
+        lista.innerHTML += `
+          <li>
+            ${cat.descripcion}
+            <button onclick="eliminar(${cat.id_categoria})">🗑</button>
+            <button onclick="editar(${cat.id_categoria})">✏</button>
+          </li>
+        `;
+      });
+    }
+
+    // 🟢 POST
+    async function crearCategoria() {
+      const descripcion = document.getElementById("descripcion").value;
+
+      await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ descripcion })
+      });
+
+      obtenerCategorias();
+    }
+
+    // 🔴 DELETE
+    async function eliminar(id) {
+      await fetch(`${API}/${id}`, {
+        method: "DELETE"
+      });
+
+      obtenerCategorias();
+    }
+
+    // 🟡 PUT (simple prompt)
+    async function editar(id) {
+      const nueva = prompt("Nueva descripción:");
+
+      await fetch(`${API}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ descripcion: nueva })
+      });
+
+      obtenerCategorias();
+    }
+  </script>
+
+</body>
+</html>
