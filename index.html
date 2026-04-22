@@ -6,161 +6,95 @@
   <title>Gestión de Categorías</title>
 
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-dark: #4338ca;
-      --bg: #f3f4f6;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --danger: #dc2626;
-      --warning: #f59e0b;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: system-ui, sans-serif;
-    }
-
     body {
-      background: var(--bg);
+      background: #f3f4f6;
+      font-family: sans-serif;
       padding: 30px;
-      color: var(--text);
     }
 
-    .container {
+    .box {
       max-width: 600px;
       margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
     }
 
-    .card {
-      background: var(--card);
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .form {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    input {
-      flex: 1;
+    input, button {
       padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
+      margin: 5px 0;
     }
 
     button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn-refresh {
-      width: 100%;
-      margin-bottom: 15px;
-      background: #10b981;
-      color: white;
     }
 
     ul {
       list-style: none;
+      padding: 0;
     }
 
     li {
-      background: #f9fafb;
-      padding: 10px 12px;
-      border-radius: 8px;
+      background: #eee;
       margin-bottom: 8px;
+      padding: 10px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
     }
-
-    .acciones button {
-      margin-left: 5px;
-      font-size: 12px;
-    }
-
-    .btn-edit {
-      background: var(--warning);
-      color: white;
-    }
-
-    .btn-delete {
-      background: var(--danger);
-      color: white;
-    }
-
   </style>
 </head>
 
 <body>
 
-<div class="container">
-  <div class="card">
+<div class="box">
+  <h2>Categorías</h2>
 
-    <h1>Gestión de Categorías</h1>
+  <input id="descripcion" placeholder="Nueva categoría">
+  <button onclick="crearCategoria()">Agregar</button>
 
-    <!-- CREATE -->
-    <div class="form">
-      <input id="descripcion" placeholder="Escribe una categoría">
-      <button class="btn-primary" onclick="crearCategoria()">Agregar</button>
-    </div>
+  <button onclick="obtenerCategorias()">Cargar</button>
 
-    <!-- READ -->
-    <button class="btn-refresh" onclick="obtenerCategorias()">Actualizar lista</button>
-
-    <!-- LIST -->
-    <ul id="lista"></ul>
-
-  </div>
+  <ul id="lista"></ul>
 </div>
 
 <script>
-  const API = "hhttps://alvaroutos.onrender.com/categorias";
+  const API = "https://alvaroutos.onrender.com/categorias";
 
   // GET
   async function obtenerCategorias() {
-    const res = await fetch(API);
-    const data = await res.json();
+    try {
+      const res = await fetch(API);
 
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "";
+      if (!res.ok) {
+        throw new Error("Error en el servidor");
+      }
 
-    data.forEach(cat => {
-      lista.innerHTML += `
-        <li>
-          <span>${cat.descripcion}</span>
+      const data = await res.json();
 
-          <div class="acciones">
-            <button class="btn-edit" onclick="editar(${cat.id_categoria})">Editar</button>
-            <button class="btn-delete" onclick="eliminar(${cat.id_categoria})">Eliminar</button>
-          </div>
-        </li>
-      `;
-    });
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+
+      if (!data.length) {
+        lista.innerHTML = "<li>No hay datos</li>";
+        return;
+      }
+
+      data.forEach(cat => {
+        lista.innerHTML += `
+          <li>
+            ${cat.descripcion}
+            <div>
+              <button onclick="editar(${cat.id_categoria})">✏</button>
+              <button onclick="eliminar(${cat.id_categoria})">🗑</button>
+            </div>
+          </li>
+        `;
+      });
+
+    } catch (error) {
+      console.error(error);
+      alert("Error cargando datos");
+    }
   }
 
   // POST
@@ -169,41 +103,60 @@
 
     if (!descripcion) return alert("Escribe algo");
 
-    await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ descripcion })
-    });
+    try {
+      await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ descripcion })
+      });
 
-    document.getElementById("descripcion").value = "";
-    obtenerCategorias();
+      document.getElementById("descripcion").value = "";
+      obtenerCategorias();
+
+    } catch (error) {
+      console.error(error);
+      alert("Error al crear");
+    }
   }
 
   // DELETE
   async function eliminar(id) {
-    await fetch(`${API}/${id}`, {
-      method: "DELETE"
-    });
+    try {
+      await fetch(`${API}/${id}`, {
+        method: "DELETE"
+      });
 
-    obtenerCategorias();
+      obtenerCategorias();
+
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   // PUT
   async function editar(id) {
     const nueva = prompt("Nueva descripción:");
-
     if (!nueva) return;
 
-    await fetch(`${API}/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ descripcion: nueva })
-    });
+    try {
+      await fetch(`${API}/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ descripcion: nueva })
+      });
 
-    obtenerCategorias();
+      obtenerCategorias();
+
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  // Carga inicial
+  // AUTO LOAD
   obtenerCategorias();
 </script>
 
